@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: tv-display
+    runtime: node
+    plan: free                 # البيانات في MongoDB، فالقرص لم يعد ضروريًا
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/yalanji/menu
+    envVars:
+      - key: MONGODB_URI
+        sync: false            # الصقه في لوحة Render — لا يُرفع إلى GitHub
+      - key: NODE_VERSION
+        value: "22"
