@@ -60,6 +60,9 @@ nav button.on{background:var(--gold);color:var(--ink)}
 
 main{padding-top:14px}
 .hint{font-size:12.5px;color:#6C7B90;line-height:1.7;margin-bottom:16px}
+.warn{font-size:13px;color:var(--gold);line-height:1.7;margin-bottom:16px;
+  background:rgba(217,169,60,.09);border:1px solid rgba(217,169,60,.28);
+  border-radius:11px;padding:11px 13px}
 
 .sec{margin-bottom:26px}
 .sech{display:flex;align-items:center;gap:8px;margin-bottom:10px}
@@ -266,6 +269,12 @@ function render(){
   if (T === 0) {
     h += '<p class="hint">اضغط على أي اسم لتعديله، و− أو + للسعر. '
        + 'لا يظهر شيء على الشاشة قبل الضغط على الزر الأصفر.</p>';
+    if (S.lang !== 'ar') {
+      var miss = 0, tot = 0;
+      S.menu.forEach(function(c){ c.i.forEach(function(r){ tot++; if (!r[2]) miss++; }); });
+      if (miss) h += '<p class="warn">' + miss + ' من ' + tot
+        + ' أصناف بلا اسم عبري — تظهر بالعربية على الشاشة حتى تكتبها في الحقل الرمادي.</p>';
+    }
     S.menu.forEach(function(c, ci){
       h += '<div class="sec"><div class="sech">'
          + '<input value="' + esc(c.n) + '" data-f="c' + ci + '" placeholder="اسم القسم"'
@@ -371,7 +380,12 @@ function idel(c, r){
 function cn(c, v){ S.menu[c].n = v; mark(); }
 function cn2(c, v){ S.menu[c].n2 = v; mark(); }
 function nm2(c, r, v){ S.menu[c].i[r][2] = v; mark(); }
-function sg(v){ S.lang = v; render(); mark('لغة الشاشة: ' + v); }
+function sg(v){
+  S.lang = v;
+  render();
+  mark(v === 'ar' ? 'لغة الشاشة: عربي'
+     : 'اذهب لتبويب الأصناف واكتب الأسماء العبرية، ثم اعرض على الشاشة');
+}
 function cadd(){
   S.menu.push({ n: '', n2: '', i: [['', 0, '']] });
   focusOn = 'c' + (S.menu.length - 1);
