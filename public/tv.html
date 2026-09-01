@@ -1,1 +1,266 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>شاشة العرض</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0C1420; --panel:#132033; --edge:#22344C;
+  --gold:#D9A93C; --cream:#F3EDE1; --muted:#8FA0B8; --hot:#E0553C;
+  --ar:'Cairo','Segoe UI',system-ui,sans-serif;
+  --num:'Oswald','Cairo',system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#000}
+body{font-family:var(--ar);color:var(--cream);-webkit-font-smoothing:antialiased}
 
+#fit{position:fixed;inset:0;overflow:hidden;background:#000}
+#stage{position:absolute;top:0;left:0;width:1920px;height:1080px;
+  transform-origin:top left;will-change:transform}
+#board{position:absolute;inset:0;display:grid;grid-template-rows:auto 1fr auto;
+  padding:36px;gap:26px;
+  background:radial-gradient(130% 85% at 50% -12%,rgba(217,169,60,.13),transparent 62%),
+             linear-gradient(180deg,#0E1726,#0A1119);
+  transition:transform 3s linear}
+
+.top{display:flex;align-items:center;gap:20px;border-bottom:1px solid var(--edge);padding-bottom:18px}
+.mark{display:flex;flex-direction:column;line-height:1}
+.mark b{font-size:52px;font-weight:900;letter-spacing:-.02em}
+.mark i{font-style:normal;font-size:17px;color:var(--gold);letter-spacing:.34em;
+  margin-top:7px;font-family:var(--num);font-weight:400}
+.clock{margin-inline-start:auto;font-family:var(--num);font-size:46px;color:var(--muted);
+  font-variant-numeric:tabular-nums;letter-spacing:.05em}
+
+.body{display:block;min-height:0}
+.menu{min-height:0;overflow:hidden;display:flex;gap:40px;align-items:flex-start;--k:1;height:100%}
+.col{flex:1 1 0;min-width:0}
+.cat{margin-bottom:calc(26px * var(--k))}
+.cat h2{font-size:calc(26px * var(--k));font-weight:900;color:var(--gold);
+  letter-spacing:.08em;margin-bottom:calc(12px * var(--k));
+  display:flex;align-items:center;gap:12px}
+.cat h2::after{content:"";flex:1;height:1px;background:var(--edge)}
+.row{display:flex;align-items:baseline;gap:10px;padding:calc(8px * var(--k)) 0}
+.nm{font-size:calc(29px * var(--k));font-weight:600;white-space:nowrap}
+.dots{flex:1;border-bottom:2px dotted var(--edge);transform:translateY(-7px)}
+.pr{font-family:var(--num);font-size:calc(32px * var(--k));font-weight:600;
+  font-variant-numeric:tabular-nums;transition:color .4s,transform .4s}
+.pr small{font-size:.6em;color:var(--muted);margin-inline-start:4px}
+.pr.hit{color:var(--gold);transform:scale(1.16)}
+.tag{font-size:calc(15px * var(--k));font-weight:900;color:#0C1420;background:var(--gold);
+  padding:3px 10px;border-radius:6px;transform:translateY(-5px)}
+.gone{opacity:.26}
+.gone .pr{text-decoration:line-through}
+
+.tick{height:78px;border-radius:14px;overflow:hidden;display:flex;align-items:center;
+  background:linear-gradient(90deg,var(--panel),#18263C,var(--panel));border:1px solid var(--edge)}
+.tick.off{display:none}
+.tape{display:flex;white-space:nowrap;animation:sl 32s linear infinite}
+.tape span{font-size:31px;font-weight:600;padding:0 60px}
+.tape span.hot{color:var(--hot);font-weight:900}
+.tape span::before{content:"◆";color:var(--gold);font-size:14px;transform:translateY(-8px);
+  display:inline-block;margin-inline-end:48px}
+@keyframes sl{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+
+#dot{position:fixed;top:10px;inset-inline-start:10px;width:11px;height:11px;
+  border-radius:50%;background:var(--hot);opacity:0;transition:opacity .5s;z-index:9}
+#dot.on{opacity:.8}
+#msg{position:fixed;inset:0;display:none;place-items:center;text-align:center;
+  background:var(--ink);z-index:8;padding:8vw}
+#msg.on{display:grid}
+#msg h1{font-size:5vh;font-weight:900;margin-bottom:2vh}
+#msg p{font-size:2.4vh;color:var(--muted);line-height:1.7}
+@media (prefers-reduced-motion:reduce){.tape{animation:none}#board{transition:none}}
+</style>
+</head>
+<body>
+
+<div id="fit"><div id="stage">
+  <div id="board">
+    <header class="top">
+      <div class="mark"><b id="ttl"></b><i id="ltn"></i></div>
+      <div class="clock" id="clock">—:—</div>
+    </header>
+    <div class="body"><main class="menu" id="menu"></main></div>
+    <div class="tick off" id="tick"><div class="tape" id="tape"></div></div>
+  </div>
+</div></div>
+
+<div id="dot" title="غير متصلة"></div>
+<div id="msg" class="on"><div><h1>جارٍ التحميل…</h1><p id="msgp"></p></div></div>
+
+<script>
+(function(){
+'use strict';
+var SLUG = location.pathname.split('/').filter(Boolean).pop() || '';
+var CACHE = 'tv:' + SLUG;
+var S = null, prev = {};
+
+var $ = function(i){ return document.getElementById(i); };
+var esc = function(s){ return String(s==null?'':s).replace(/[&<>]/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); };
+
+// ── الساعة ──
+function clock(){
+  var d = new Date(), h = d.getHours(), m = d.getMinutes();
+  $('clock').textContent = (h<10?'0':'') + h + ':' + (m<10?'0':'') + m;
+}
+clock(); setInterval(clock, 20000);
+
+// ── توزيع الأقسام على الأعمدة ──
+function split(n){
+  var cols = [], tot = [];
+  for (var k = 0; k < n; k++) { cols.push([]); tot.push(0); }
+  S.menu.forEach(function(c, i){
+    var m = 0;
+    for (var k = 1; k < n; k++) if (tot[k] < tot[m]) m = k;
+    cols[m].push(i); tot[m] += c.i.length + 1.6;
+  });
+  return cols.filter(function(c){ return c.length; });
+}
+
+// ── الرسم ──
+function render(hits){
+  if (!S) return;
+  $('msg').className = '';
+  $('ttl').textContent = S.title || '';
+  $('ltn').textContent = S.latin || '';
+  document.title = (S.title || 'شاشة العرض');
+
+  var h = '';
+  split(S.cols || 3).forEach(function(idx){
+    h += '<div class="col">';
+    idx.forEach(function(ci){
+      var c = S.menu[ci];
+      h += '<section class="cat"><h2>' + esc(c.n) + '</h2>';
+      c.i.forEach(function(r){
+        var g = !!S.gone[r[0]];
+        h += '<div class="row' + (g ? ' gone' : '') + '">'
+           + '<span class="nm">' + esc(r[0]) + '</span>'
+           + (g ? '<span class="tag">نفد</span>' : '')
+           + '<span class="dots"></span>'
+           + '<span class="pr' + (hits && hits[r[0]] ? ' hit' : '') + '">'
+           + r[1] + '<small>' + esc(S.cur || '₪') + '</small></span></div>';
+      });
+      h += '</section>';
+    });
+    h += '</div>';
+  });
+  $('menu').innerHTML = h;
+
+  if (S.ticker && S.ticker.length) {
+    var t = '';
+    for (var k = 0; k < 2; k++) S.ticker.forEach(function(o){
+      t += '<span class="' + (o.h ? 'hot' : '') + '">' + esc(o.t) + '</span>';
+    });
+    $('tape').innerHTML = t;
+    $('tick').className = 'tick';
+  } else $('tick').className = 'tick off';
+
+  shrink();
+  if (hits) setTimeout(function(){ render(null); }, 2600);
+}
+
+// ── تصغير تلقائي حتى يدخل كل شيء ──
+function shrink(){
+  var m = $('menu'), k = 1;
+  m.style.setProperty('--k', 1);
+  for (var i = 0; i < 30; i++) {
+    var tall = 0, cs = m.children;
+    for (var j = 0; j < cs.length; j++) tall = Math.max(tall, cs[j].scrollHeight);
+    if (tall <= m.clientHeight - 4) break;
+    k -= 0.03;
+    if (k < 0.5) break;
+    m.style.setProperty('--k', k.toFixed(3));
+  }
+}
+
+// ── ملاءمة أي شاشة ──
+function fit(){
+  var el = $('fit');
+  var w = el.clientWidth || innerWidth, hh = el.clientHeight || innerHeight;
+  if (!w || !hh) { requestAnimationFrame(fit); return; }
+  var s = Math.min(w / 1920, hh / 1080);
+  $('stage').style.transform =
+    'translate(' + ((w - 1920 * s) / 2) + 'px,' + ((hh - 1080 * s) / 2) + 'px) scale(' + s + ')';
+}
+addEventListener('resize', function(){ fit(); shrink(); });
+addEventListener('orientationchange', function(){ setTimeout(fit, 150); });
+
+// ── تطبيق حالة جديدة مع إبراز الأسعار المتغيّرة ──
+function apply(st){
+  if (!st || !st.menu) return;
+  var hits = null;
+  if (S) {
+    hits = {};
+    var seen = false;
+    st.menu.forEach(function(c){ c.i.forEach(function(r){
+      if (prev[r[0]] !== undefined && prev[r[0]] !== r[1]) { hits[r[0]] = 1; seen = true; }
+    }); });
+    if (!seen) hits = null;
+  }
+  S = st;
+  prev = {};
+  S.menu.forEach(function(c){ c.i.forEach(function(r){ prev[r[0]] = r[1]; }); });
+  try { localStorage.setItem(CACHE, JSON.stringify(st)); } catch (e) {}
+  render(hits);
+  fit();
+}
+
+// ── الذاكرة المحلية أولًا: تعمل بلا إنترنت ──
+try {
+  var c = localStorage.getItem(CACHE);
+  if (c) apply(JSON.parse(c));
+} catch (e) {}
+
+function offline(on){ $('dot').className = on ? 'on' : ''; }
+
+// ── بث مباشر من الخادم ──
+var es = null;
+function connect(){
+  try { if (es) es.close(); } catch (e) {}
+  es = new EventSource('/api/' + encodeURIComponent(SLUG) + '/events');
+  es.onopen = function(){ offline(false); };
+  es.onmessage = function(e){
+    offline(false);
+    try { apply(JSON.parse(e.data)); } catch (x) {}
+  };
+  es.onerror = function(){
+    offline(true);
+    if (!S) {
+      $('msg').className = 'on';
+      $('msg').querySelector('h1').textContent = 'تعذّر الاتصال';
+      $('msgp').textContent = 'ستظهر القائمة تلقائيًا عند عودة الاتصال.';
+    }
+  };
+}
+connect();
+
+// ── تحميل احتياطي كل دقيقتين لو انقطع البث ──
+setInterval(function(){
+  fetch('/api/' + encodeURIComponent(SLUG) + '/menu', { cache: 'no-store' })
+    .then(function(r){ return r.ok ? r.json() : Promise.reject(0); })
+    .then(function(st){ offline(false); if (!S || st.updated !== S.updated) apply(st); })
+    .catch(function(){ offline(true); });
+}, 120000);
+
+// ── إزاحة صامتة ضد احتراق الشاشة ──
+var sh = [[0,0],[7,4],[-6,7],[5,-5],[-7,-3]], si = 0;
+setInterval(function(){
+  si = (si + 1) % sh.length;
+  $('board').style.transform = 'translate(' + sh[si][0] + 'px,' + sh[si][1] + 'px)';
+}, 9 * 60 * 1000);
+
+fit();
+setTimeout(fit, 200); setTimeout(fit, 900);
+try { if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(function(){}); } catch (e) {}
+document.addEventListener('visibilitychange', function(){
+  if (document.visibilityState === 'visible') { connect(); fit(); }
+});
+})();
+</script>
+</body>
+</html>

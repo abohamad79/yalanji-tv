@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>لوحة التحكم</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Oswald:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#080E17; --panel:#111C2C; --raise:#1A2941; --edge:#22344C;
+  --gold:#D9A93C; --cream:#F3EDE1; --muted:#8FA0B8; --hot:#E0553C; --ok:#4ADE80;
+  --ar:'Cairo','Segoe UI',system-ui,sans-serif;
+  --num:'Oswald','Cairo',system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--ink);color:var(--cream);font-family:var(--ar);
+  padding-bottom:140px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:620px;margin:0 auto;padding:0 16px}
+
+/* ── القفل ── */
+#lock{position:fixed;inset:0;z-index:60;background:var(--ink);display:grid;
+  place-items:center;padding:24px}
+#lock.off{display:none}
+#lock .b2{width:100%;max-width:340px;text-align:center}
+#lock .lg{font-size:32px;font-weight:900;margin-bottom:6px}
+#lock .sm{font-size:14px;color:var(--muted);margin-bottom:26px}
+#lock input{width:100%;background:var(--panel);border:1px solid var(--edge);
+  color:var(--cream);font-family:inherit;font-size:19px;padding:16px;
+  border-radius:13px;text-align:center;letter-spacing:.12em}
+#lock input:focus{outline:none;border-color:var(--gold)}
+#lock button{width:100%;margin-top:12px;background:var(--gold);border:none;
+  color:var(--ink);font-family:inherit;font-size:17px;font-weight:900;
+  padding:16px;border-radius:13px}
+#lock .er{color:var(--hot);font-size:13.5px;margin-top:14px;min-height:20px}
+.shake{animation:sk .38s}
+@keyframes sk{0%,100%{transform:none}25%{transform:translateX(-9px)}
+  50%{transform:translateX(9px)}75%{transform:translateX(-5px)}}
+
+header{position:sticky;top:0;z-index:20;background:var(--ink);
+  border-bottom:1px solid var(--edge);padding-top:18px}
+.hd{display:flex;align-items:center;gap:9px}
+.hd b{font-size:21px;font-weight:900;flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dot{display:inline-flex;align-items:center;gap:7px;font-size:12px;
+  padding:6px 11px;border-radius:99px;background:rgba(74,222,128,.14);color:var(--ok)}
+.dot i{width:7px;height:7px;border-radius:50%;background:var(--ok);font-style:normal;
+  animation:pl 1.7s infinite}
+.dot.no{background:rgba(224,85,60,.14);color:var(--hot)}
+.dot.no i{background:var(--hot);animation:none}
+@keyframes pl{50%{opacity:.25}}
+.out{background:var(--panel);border:none;color:var(--muted);font-family:inherit;
+  font-size:12px;font-weight:700;padding:7px 12px;border-radius:99px}
+nav{display:flex;gap:6px;margin:14px 0 12px;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{background:var(--panel);border:none;color:var(--muted);font-family:inherit;
+  font-size:14px;font-weight:700;padding:10px 16px;border-radius:10px;white-space:nowrap}
+nav button.on{background:var(--gold);color:var(--ink)}
+
+main{padding-top:14px}
+.hint{font-size:12.5px;color:#6C7B90;line-height:1.7;margin-bottom:16px}
+
+.sec{margin-bottom:26px}
+.sech{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.sech input{flex:1;min-width:0;background:transparent;border:none;color:var(--gold);
+  font-family:inherit;font-size:15px;font-weight:900;letter-spacing:.09em;
+  padding:8px 2px;border-bottom:1px solid transparent}
+.sech input:focus{outline:none;border-bottom-color:var(--edge)}
+.x{background:none;border:none;color:#54637A;font-size:19px;width:38px;height:38px;border-radius:9px}
+.x:active{background:var(--raise);color:var(--hot)}
+
+.it{background:var(--panel);border-radius:14px;padding:10px 12px 12px;margin-bottom:8px}
+.it.dim{opacity:.42}
+.it input.nm{width:100%;background:transparent;border:none;color:var(--cream);
+  font-family:inherit;font-size:17px;font-weight:600;padding:8px 2px;
+  border-bottom:1px solid transparent}
+.it input.nm:focus{outline:none;border-bottom-color:var(--edge)}
+.it .r{display:flex;align-items:center;gap:7px;margin-top:8px}
+.step{display:flex;align-items:center;background:var(--raise);border-radius:11px}
+.step button{background:none;border:none;color:var(--cream);font-family:inherit;
+  font-size:21px;font-weight:700;width:44px;height:44px}
+.step button:active{color:var(--gold)}
+.step .val{font-family:var(--num);font-size:19px;min-width:46px;text-align:center;
+  font-variant-numeric:tabular-nums}
+.tgl{background:var(--raise);border:none;color:var(--muted);font-family:inherit;
+  font-size:13px;font-weight:700;height:44px;padding:0 14px;border-radius:11px}
+.tgl.on{background:var(--hot);color:#fff}
+.it .x{margin-inline-start:auto}
+
+.add{width:100%;background:transparent;border:1px dashed var(--edge);color:var(--muted);
+  font-family:inherit;font-size:14.5px;font-weight:700;padding:14px;border-radius:13px}
+.add.big{margin-top:6px;border-color:var(--gold);color:var(--gold)}
+
+.off{background:var(--panel);border-radius:14px;padding:12px;margin-bottom:10px}
+.off .r{display:flex;gap:8px;margin-top:10px;align-items:center}
+input[type=text].box,input[type=password].box{width:100%;background:var(--raise);
+  border:1px solid transparent;color:var(--cream);font-family:inherit;font-size:16px;
+  padding:13px;border-radius:11px}
+input:focus{outline:none}
+.box:focus{border-color:var(--gold)}
+
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:7px}
+.seg{display:flex;gap:8px}
+.seg button{flex:1;background:var(--raise);border:none;color:var(--muted);
+  font-family:var(--num);font-size:18px;padding:13px;border-radius:11px}
+.seg button.on{background:var(--gold);color:var(--ink);font-weight:600}
+.link{background:var(--panel);border-radius:14px;padding:14px;margin-top:20px}
+.link p{font-size:13px;color:var(--muted);margin-bottom:9px}
+.link code{display:block;background:var(--ink);border-radius:10px;padding:13px;
+  font-family:var(--num);font-size:15px;color:var(--gold);direction:ltr;word-break:break-all}
+
+#bar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--panel);
+  border-top:1px solid var(--edge);padding:14px 16px calc(14px + env(safe-area-inset-bottom));
+  display:flex;align-items:center;gap:12px;transform:translateY(130%);transition:transform .26s}
+#bar.on{transform:none}
+#bar span{flex:1;font-size:13px;color:var(--muted)}
+#bar button{background:var(--gold);border:none;color:var(--ink);font-family:inherit;
+  font-size:16px;font-weight:900;padding:15px 24px;border-radius:13px}
+#bar button[disabled]{opacity:.5}
+</style>
+</head>
+<body>
+
+<div id="lock"><div class="b2">
+  <div class="lg" id="lgt">لوحة التحكم</div>
+  <div class="sm">أدخل كلمة المرور</div>
+  <input type="password" id="pw" autocomplete="current-password" placeholder="••••••"
+         onkeydown="if(event.key==='Enter')login()">
+  <button onclick="login()">دخول</button>
+  <div class="er" id="er"></div>
+</div></div>
+
+<header><div class="wrap">
+  <div class="hd">
+    <b id="brand">لوحة التحكم</b>
+    <span class="dot no" id="dot"><i></i><span id="dtx">—</span></span>
+    <button class="out" onclick="logout()">خروج</button>
+  </div>
+  <nav>
+    <button class="on" onclick="tab(0,this)">الأصناف</button>
+    <button onclick="tab(1,this)">العروض</button>
+    <button onclick="tab(2,this)">الإعدادات</button>
+  </nav>
+</div></header>
+
+<main class="wrap" id="main"></main>
+
+<div id="bar"><span id="msg"></span><button id="save" onclick="push()">عرض على الشاشة</button></div>
+
+<script>
+'use strict';
+var SLUG = location.pathname.split('/').filter(Boolean).pop() || '';
+var API = '/api/' + encodeURIComponent(SLUG);
+var S = null, T = 0, dirty = false, focusOn = null;
+
+var $ = function(i){ return document.getElementById(i); };
+var esc = function(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+
+function api(p, opt){
+  return fetch(API + p, Object.assign({ credentials: 'same-origin' }, opt || {}))
+    .then(function(r){
+      return r.json().catch(function(){ return {}; }).then(function(j){
+        if (!r.ok) throw Object.assign(new Error(j.error || 'خطأ'), { status: r.status });
+        return j;
+      });
+    });
+}
+
+// ══ الدخول ══
+function login(){
+  var v = $('pw').value;
+  $('er').textContent = '';
+  api('/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: v })
+  }).then(function(){
+    $('pw').value = '';
+    $('lock').className = 'off';
+    boot();
+  }).catch(function(e){
+    var b = document.querySelector('#lock .b2');
+    b.className = 'b2 shake';
+    setTimeout(function(){ b.className = 'b2'; }, 420);
+    $('er').textContent = e.message;
+    $('pw').value = ''; $('pw').focus();
+  });
+}
+function logout(){
+  api('/logout', { method: 'POST' }).catch(function(){}).then(function(){
+    S = null; dirty = false;
+    $('bar').className = '';
+    $('lock').className = '';
+    setTimeout(function(){ $('pw').focus(); }, 100);
+  });
+}
+
+// ══ التحميل ══
+function boot(){
+  api('/state').then(function(d){
+    S = d.state;
+    if (!S.gone) S.gone = {};
+    if (!S.ticker) S.ticker = [];
+    online(d.screens);
+    render();
+  }).catch(function(e){
+    if (e.status === 401) { $('lock').className = ''; setTimeout(function(){ $('pw').focus(); }, 100); }
+    else { $('msg').textContent = e.message; $('bar').className = 'on'; }
+  });
+}
+function online(n){
+  $('dot').className = n > 0 ? 'dot' : 'dot no';
+  $('dtx').textContent = n > 0 ? (n > 1 ? n + ' شاشات متصلة' : 'الشاشة متصلة') : 'الشاشة غير متصلة';
+}
+setInterval(function(){
+  if (!S) return;
+  api('/state').then(function(d){ online(d.screens); }).catch(function(){});
+}, 12000);
+
+function mark(t){
+  dirty = true;
+  $('msg').textContent = t || 'تغييرات لم تُعرض بعد';
+  $('bar').className = 'on';
+}
+function push(){
+  $('save').disabled = true;
+  $('msg').textContent = 'جارٍ الحفظ…';
+  api('/state', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(S)
+  }).then(function(d){
+    S = d.state;
+    if (!S.gone) S.gone = {};
+    if (!S.ticker) S.ticker = [];
+    dirty = false;
+    $('save').disabled = false;
+    $('msg').textContent = 'ظهر على الشاشة ✓';
+    render();
+    setTimeout(function(){ if (!dirty) $('bar').className = ''; }, 1900);
+  }).catch(function(e){
+    $('save').disabled = false;
+    $('msg').textContent = e.status === 401 ? 'انتهت الجلسة — سجّل الدخول' : e.message;
+    if (e.status === 401) $('lock').className = '';
+  });
+}
+
+function tab(i, el){
+  T = i;
+  var b = document.querySelectorAll('nav button');
+  for (var k = 0; k < b.length; k++) b[k].className = '';
+  el.className = 'on';
+  render();
+}
+
+// ══ العرض ══
+function render(){
+  if (!S) return;
+  var h = '';
+  if (T === 0) {
+    h += '<p class="hint">اضغط على أي اسم لتعديله، و− أو + للسعر. '
+       + 'لا يظهر شيء على الشاشة قبل الضغط على الزر الأصفر.</p>';
+    S.menu.forEach(function(c, ci){
+      h += '<div class="sec"><div class="sech">'
+         + '<input value="' + esc(c.n) + '" data-f="c' + ci + '" placeholder="اسم القسم"'
+         + ' oninput="cn(' + ci + ',this.value)">'
+         + '<button class="x" onclick="cd(' + ci + ')">✕</button></div>';
+      c.i.forEach(function(r, ri){
+        var g = !!S.gone[r[0]];
+        h += '<div class="it' + (g ? ' dim' : '') + '">'
+           + '<input class="nm" value="' + esc(r[0]) + '" data-f="i' + ci + '_' + ri + '"'
+           + ' placeholder="اسم الصنف" oninput="nm(' + ci + ',' + ri + ',this.value)">'
+           + '<div class="r"><div class="step">'
+           + '<button onclick="pr(' + ci + ',' + ri + ',-1)">−</button>'
+           + '<span class="val" id="v' + ci + '_' + ri + '">' + r[1] + '</span>'
+           + '<button onclick="pr(' + ci + ',' + ri + ',1)">+</button></div>'
+           + '<button class="tgl' + (g ? ' on' : '') + '" onclick="gn(' + ci + ',' + ri + ')">'
+           + (g ? 'نفد' : 'متوفر') + '</button>'
+           + '<button class="x" onclick="idel(' + ci + ',' + ri + ')">✕</button>'
+           + '</div></div>';
+      });
+      h += '<button class="add" onclick="iadd(' + ci + ')">+ إضافة صنف</button></div>';
+    });
+    h += '<button class="add big" onclick="cadd()">+ إضافة قسم جديد</button>';
+  }
+  else if (T === 1) {
+    h += '<p class="hint">نص يمشي في الشريط أسفل الشاشة. اتركه فارغًا ولن يظهر الشريط.</p>';
+    S.ticker.forEach(function(o, i){
+      h += '<div class="off"><input type="text" class="box" value="' + esc(o.t) + '"'
+         + ' data-f="t' + i + '" placeholder="اكتب العرض" oninput="tk(' + i + ',this.value)">'
+         + '<div class="r"><button class="tgl' + (o.h ? ' on' : '') + '" onclick="th(' + i + ')">عرض عاجل</button>'
+         + '<button class="x" style="margin-inline-start:auto" onclick="td(' + i + ')">✕</button>'
+         + '</div></div>';
+    });
+    h += '<button class="add" onclick="ta()">+ إضافة عرض</button>';
+  }
+  else {
+    h += '<div class="field"><label>الاسم على الشاشة</label>'
+       + '<input type="text" class="box" value="' + esc(S.title) + '" data-f="ti" oninput="st(this.value)"></div>'
+       + '<div class="field"><label>السطر اللاتيني تحته</label>'
+       + '<input type="text" class="box" value="' + esc(S.latin || '') + '" data-f="la" oninput="sl(this.value)"></div>'
+       + '<div class="field"><label>عدد الأعمدة على الشاشة</label><div class="seg">'
+       + [2,3,4].map(function(n){ return '<button class="' + (S.cols === n ? 'on' : '')
+         + '" onclick="sc(' + n + ')">' + n + '</button>'; }).join('')
+       + '</div></div>'
+       + '<div class="link"><p>افتح هذا الرابط على تلفزيون المحل</p><code>'
+       + esc(location.origin + '/tv/' + SLUG) + '</code></div>'
+       + '<div class="field" style="margin-top:22px"><label>تغيير كلمة المرور</label>'
+       + '<input type="password" class="box" id="p_old" placeholder="الكلمة الحالية" style="margin-bottom:8px">'
+       + '<input type="password" class="box" id="p_new" placeholder="الجديدة — ٦ خانات فأكثر">'
+       + '<button class="add" style="margin-top:8px" onclick="setpw()">حفظ كلمة المرور</button>'
+       + '<p id="p_msg" style="font-size:13px;margin-top:10px;min-height:18px"></p></div>';
+  }
+  $('main').innerHTML = h;
+  if (focusOn) {
+    var el = document.querySelector('[data-f="' + focusOn + '"]');
+    if (el) { el.focus(); try { el.setSelectionRange(el.value.length, el.value.length); } catch (e) {} }
+    focusOn = null;
+  }
+  $('brand').textContent = S.title || 'لوحة التحكم';
+  $('lgt').textContent = S.title || 'لوحة التحكم';
+}
+
+// ══ الأصناف ══
+function nm(c, r, v){
+  var old = S.menu[c].i[r][0];
+  if (S.gone[old]) { delete S.gone[old]; S.gone[v] = 1; }
+  S.menu[c].i[r][0] = v; mark();
+}
+function pr(c, r, d){
+  var it = S.menu[c].i[r];
+  it[1] = Math.max(0, it[1] + d);
+  var el = $('v' + c + '_' + r);
+  if (el) el.textContent = it[1];
+  mark((it[0] || 'الصنف') + ' ← ' + it[1] + ' ' + (S.cur || '₪'));
+}
+function gn(c, r){
+  var n = S.menu[c].i[r][0];
+  if (S.gone[n]) delete S.gone[n]; else S.gone[n] = 1;
+  render(); mark(S.gone[n] ? n + ' — نفد' : n + ' — رجع للقائمة');
+}
+function iadd(c){
+  S.menu[c].i.push(['', 0]);
+  focusOn = 'i' + c + '_' + (S.menu[c].i.length - 1);
+  render(); mark('صنف جديد — اكتب الاسم واضبط السعر');
+}
+function idel(c, r){
+  var n = S.menu[c].i[r][0] || 'الصنف';
+  S.menu[c].i.splice(r, 1); delete S.gone[n];
+  render(); mark('حُذف ' + n);
+}
+function cn(c, v){ S.menu[c].n = v; mark(); }
+function cadd(){
+  S.menu.push({ n: '', i: [['', 0]] });
+  focusOn = 'c' + (S.menu.length - 1);
+  render(); mark('قسم جديد — اكتب اسمه');
+  setTimeout(function(){ scrollTo(0, document.body.scrollHeight); }, 60);
+}
+function cd(c){
+  var n = S.menu[c].n || 'القسم';
+  S.menu[c].i.forEach(function(r){ delete S.gone[r[0]]; });
+  S.menu.splice(c, 1);
+  render(); mark('حُذف قسم ' + n);
+}
+
+// ══ العروض والإعدادات ══
+function tk(i, v){ S.ticker[i].t = v; mark(); }
+function th(i){ S.ticker[i].h = !S.ticker[i].h; render(); mark(); }
+function td(i){ S.ticker.splice(i, 1); render(); mark('حُذف العرض'); }
+function ta(){ S.ticker.push({ t: '', h: false }); focusOn = 't' + (S.ticker.length - 1); render(); mark(); }
+function st(v){ S.title = v; $('brand').textContent = v || 'لوحة التحكم'; mark(); }
+function sl(v){ S.latin = v; mark(); }
+function sc(n){ S.cols = n; render(); mark('الأعمدة: ' + n); }
+
+function setpw(){
+  var m = $('p_msg');
+  api('/password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ old: $('p_old').value, next: $('p_new').value })
+  }).then(function(){
+    $('p_old').value = ''; $('p_new').value = '';
+    m.style.color = '#4ADE80'; m.textContent = 'تم تغيير كلمة المرور';
+  }).catch(function(e){
+    m.style.color = '#E0553C'; m.textContent = e.message;
+  });
+}
+
+addEventListener('beforeunload', function(e){
+  if (dirty) { e.preventDefault(); e.returnValue = ''; }
+});
+
+// ══ بدء ══
+api('/state').then(function(d){
+  $('lock').className = 'off';
+  S = d.state;
+  if (!S.gone) S.gone = {};
+  if (!S.ticker) S.ticker = [];
+  online(d.screens);
+  render();
+}).catch(function(){
+  setTimeout(function(){ $('pw').focus(); }, 250);
+});
+</script>
+</body>
+</html>
