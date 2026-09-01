@@ -42,16 +42,24 @@ body{font-family:var(--ar);color:var(--cream);-webkit-font-smoothing:antialiased
 .cat h2{font-size:calc(26px * var(--k));font-weight:900;color:var(--gold);
   letter-spacing:.08em;margin-bottom:calc(12px * var(--k));
   display:flex;align-items:center;gap:12px}
+.cat h2 em{font-style:normal;font-size:.78em;opacity:.62;font-weight:600;
+  letter-spacing:.04em}
 .cat h2::after{content:"";flex:1;height:1px;background:var(--edge)}
-.row{display:flex;align-items:baseline;gap:10px;padding:calc(8px * var(--k)) 0}
-.nm{font-size:calc(29px * var(--k));font-weight:600;white-space:nowrap}
-.dots{flex:1;border-bottom:2px dotted var(--edge);transform:translateY(-7px)}
+.row{display:grid;grid-template-columns:auto 1fr auto auto;align-items:start;
+  gap:10px;padding:calc(8px * var(--k)) 0}
+.nm{font-size:calc(29px * var(--k));font-weight:600;white-space:nowrap;line-height:1.15}
+.nm em{display:block;font-style:normal;font-size:.6em;color:var(--muted);
+  font-weight:400;margin-top:calc(3px * var(--k))}
+.dots{border-bottom:2px dotted var(--edge);
+  margin-top:calc(23px * var(--k));align-self:start}
 .pr{font-family:var(--num);font-size:calc(32px * var(--k));font-weight:600;
-  font-variant-numeric:tabular-nums;transition:color .4s,transform .4s}
+  font-variant-numeric:tabular-nums;transition:color .4s,transform .4s;
+  align-self:start;line-height:1.05}
 .pr small{font-size:.6em;color:var(--muted);margin-inline-start:4px}
 .pr.hit{color:var(--gold);transform:scale(1.16)}
 .tag{font-size:calc(15px * var(--k));font-weight:900;color:#0C1420;background:var(--gold);
-  padding:3px 10px;border-radius:6px;transform:translateY(-5px)}
+  padding:3px 10px;border-radius:6px;align-self:start;
+  margin-top:calc(6px * var(--k))}
 .gone{opacity:.26}
 .gone .pr{text-decoration:line-through}
 
@@ -122,6 +130,15 @@ function split(n){
   return cols.filter(function(c){ return c.length; });
 }
 
+// ── الاسم حسب لغة العرض ──
+function label(primary, hebrew){
+  var L = S.lang || 'ar';
+  var a = primary || '', b = hebrew || '';
+  if (L === 'he') return esc(b || a);
+  if (L === 'both' && b && a) return esc(a) + '<em>' + esc(b) + '</em>';
+  return esc(a || b);
+}
+
 // ── الرسم ──
 function render(hits){
   if (!S) return;
@@ -135,13 +152,16 @@ function render(hits){
     h += '<div class="col">';
     idx.forEach(function(ci){
       var c = S.menu[ci];
-      h += '<section class="cat"><h2>' + esc(c.n) + '</h2>';
+      var cn = esc(c.n);
+      if ((S.lang || 'ar') === 'he') cn = esc(c.n2 || c.n);
+      else if (S.lang === 'both' && c.n2) cn = esc(c.n) + ' <em>' + esc(c.n2) + '</em>';
+      h += '<section class="cat"><h2>' + cn + '</h2>';
       c.i.forEach(function(r){
         var g = !!S.gone[r[0]];
         h += '<div class="row' + (g ? ' gone' : '') + '">'
-           + '<span class="nm">' + esc(r[0]) + '</span>'
-           + (g ? '<span class="tag">نفد</span>' : '')
+           + '<span class="nm">' + label(r[0], r[2]) + '</span>'
            + '<span class="dots"></span>'
+           + (g ? '<span class="tag">' + ((S.lang || 'ar') === 'he' ? 'אזל' : 'نفد') + '</span>' : '')
            + '<span class="pr' + (hits && hits[r[0]] ? ' hit' : '') + '">'
            + r[1] + '<small>' + esc(S.cur || '₪') + '</small></span></div>';
       });

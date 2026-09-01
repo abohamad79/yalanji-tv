@@ -76,6 +76,9 @@ main{padding-top:14px}
   font-family:inherit;font-size:17px;font-weight:600;padding:8px 2px;
   border-bottom:1px solid transparent}
 .it input.nm:focus{outline:none;border-bottom-color:var(--edge)}
+.it input.nm.he{font-size:15px;font-weight:400;color:var(--muted);padding-top:2px}
+.sech input.he{font-size:13px;font-weight:700;color:var(--muted);
+  letter-spacing:.04em;flex:0 1 40%}
 .it .r{display:flex;align-items:center;gap:7px;margin-top:8px}
 .step{display:flex;align-items:center;background:var(--raise);border-radius:11px}
 .step button{background:none;border:none;color:var(--cream);font-family:inherit;
@@ -267,12 +270,18 @@ function render(){
       h += '<div class="sec"><div class="sech">'
          + '<input value="' + esc(c.n) + '" data-f="c' + ci + '" placeholder="اسم القسم"'
          + ' oninput="cn(' + ci + ',this.value)">'
+         + (S.lang === 'ar' ? '' :
+            '<input class="he" value="' + esc(c.n2 || '') + '" data-f="k' + ci + '"'
+            + ' placeholder="שם הקטגוריה" oninput="cn2(' + ci + ',this.value)">')
          + '<button class="x" onclick="cd(' + ci + ')">✕</button></div>';
       c.i.forEach(function(r, ri){
         var g = !!S.gone[r[0]];
         h += '<div class="it' + (g ? ' dim' : '') + '">'
            + '<input class="nm" value="' + esc(r[0]) + '" data-f="i' + ci + '_' + ri + '"'
            + ' placeholder="اسم الصنف" oninput="nm(' + ci + ',' + ri + ',this.value)">'
+           + (S.lang === 'ar' ? '' :
+              '<input class="nm he" value="' + esc(r[2] || '') + '" data-f="h' + ci + '_' + ri + '"'
+              + ' placeholder="שם המנה" oninput="nm2(' + ci + ',' + ri + ',this.value)">')
            + '<div class="r"><div class="step">'
            + '<button onclick="pr(' + ci + ',' + ri + ',-1)">−</button>'
            + '<span class="val" id="v' + ci + '_' + ri + '">' + r[1] + '</span>'
@@ -302,6 +311,13 @@ function render(){
        + '<input type="text" class="box" value="' + esc(S.title) + '" data-f="ti" oninput="st(this.value)"></div>'
        + '<div class="field"><label>السطر اللاتيني تحته</label>'
        + '<input type="text" class="box" value="' + esc(S.latin || '') + '" data-f="la" oninput="sl(this.value)"></div>'
+       + '<div class="field"><label>لغة الشاشة</label><div class="seg">'
+       + [['ar','عربي'],['he','עברית'],['both','الاثنان']].map(function(o){
+           return '<button class="' + (((S.lang||'ar') === o[0]) ? 'on' : '')
+             + '" style="font-family:inherit;font-size:15px;font-weight:700"'
+             + ' onclick="sg(\'' + o[0] + '\')">' + o[1] + '</button>'; }).join('')
+       + '</div><p style="font-size:12px;color:#6C7B90;margin-top:8px;line-height:1.6">'
+       + 'عند اختيار العبرية أو الاثنين يظهر حقل ثانٍ لكل صنف في تبويب الأصناف.</p></div>'
        + '<div class="field"><label>عدد الأعمدة على الشاشة</label><div class="seg">'
        + [2,3,4].map(function(n){ return '<button class="' + (S.cols === n ? 'on' : '')
          + '" onclick="sc(' + n + ')">' + n + '</button>'; }).join('')
@@ -343,7 +359,7 @@ function gn(c, r){
   render(); mark(S.gone[n] ? n + ' — نفد' : n + ' — رجع للقائمة');
 }
 function iadd(c){
-  S.menu[c].i.push(['', 0]);
+  S.menu[c].i.push(['', 0, '']);
   focusOn = 'i' + c + '_' + (S.menu[c].i.length - 1);
   render(); mark('صنف جديد — اكتب الاسم واضبط السعر');
 }
@@ -353,8 +369,11 @@ function idel(c, r){
   render(); mark('حُذف ' + n);
 }
 function cn(c, v){ S.menu[c].n = v; mark(); }
+function cn2(c, v){ S.menu[c].n2 = v; mark(); }
+function nm2(c, r, v){ S.menu[c].i[r][2] = v; mark(); }
+function sg(v){ S.lang = v; render(); mark('لغة الشاشة: ' + v); }
 function cadd(){
-  S.menu.push({ n: '', i: [['', 0]] });
+  S.menu.push({ n: '', n2: '', i: [['', 0, '']] });
   focusOn = 'c' + (S.menu.length - 1);
   render(); mark('قسم جديد — اكتب اسمه');
   setTimeout(function(){ scrollTo(0, document.body.scrollHeight); }, 60);
