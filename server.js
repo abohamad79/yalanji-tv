@@ -73,8 +73,34 @@ async function boot() {
       store[slug] = { ...JSON.parse(JSON.stringify(d)), pw: hashPw('yalanji1'), updated: Date.now() };
       await DB.save(slug, store[slug]);
       console.log(`  أُنشئ محل جديد: ${slug}`);
+      continue;
+    }
+    // ترقية مستند قديم أُنشئ قبل دعم العبرية
+    if (await backfill(store[slug], d)) {
+      await DB.save(slug, store[slug]);
+      console.log(`  حُدّث ${slug}: أُضيفت أسماء الأقسام بالعبرية`);
     }
   }
+}
+
+/** يملأ الأسماء العبرية الناقصة من البذرة، بمطابقة الاسم العربي */
+async function backfill(doc, seed) {
+  let changed = false;
+  if (doc.lang === undefined) { doc.lang = 'ar'; changed = true; }
+  if (!Array.isArray(doc.menu)) return changed;
+
+  const byName = new Map();
+  for (const c of seed.menu) {
+    if (c.n2) byName.set(c.n, c.n2);
+    for (const r of c.i) if (r[2]) byName.set(r[0], r[2]);
+  }
+  for (const c of doc.menu) {
+    if (!c.n2 && byName.has(c.n)) { c.n2 = byName.get(c.n); changed = true; }
+    for (const r of c.i) {
+      if (!r[2] && byName.has(r[0])) { r[2] = byName.get(r[0]); changed = true; }
+    }
+  }
+  return changed;
 }
 
 process.on('SIGTERM', async () => { await DB.close(); process.exit(0); });
